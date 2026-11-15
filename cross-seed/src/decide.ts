@@ -260,12 +260,10 @@ function resolutionDoesMatch(searcheeTitle: string, candidateName: string) {
 }
 
 function releaseGroupDoesMatch(searcheeTitle: string, candidateName: string) {
-	const searcheeReleaseGroup = getReleaseGroup(
-		stripExtension(searcheeTitle),
-	)?.toLowerCase();
-	const candidateReleaseGroup = getReleaseGroup(
-		stripExtension(candidateName),
-	)?.toLowerCase();
+	const searcheeStem = stripExtension(searcheeTitle);
+	const candidateStem = stripExtension(candidateName);
+	const searcheeReleaseGroup = getReleaseGroup(searcheeStem)?.toLowerCase();
+	const candidateReleaseGroup = getReleaseGroup(candidateStem)?.toLowerCase();
 
 	if (!searcheeReleaseGroup || !candidateReleaseGroup) {
 		return true; // Pass if missing -GRP
@@ -275,6 +273,26 @@ function releaseGroupDoesMatch(searcheeTitle: string, candidateName: string) {
 		candidateReleaseGroup.startsWith(searcheeReleaseGroup)
 	) {
 		return true; // -GRP matches
+	}
+
+	// Scene releases may put the group before the title instead of after it.
+	if (
+		(/^[a-z0-9]{2,20}$/.test(candidateReleaseGroup) &&
+			searcheeStem
+				.toLowerCase()
+				.startsWith(`${candidateReleaseGroup}-`) &&
+			searcheeStem
+				.slice(candidateReleaseGroup.length + 1)
+				.toLowerCase() === searcheeReleaseGroup) ||
+		(/^[a-z0-9]{2,20}$/.test(searcheeReleaseGroup) &&
+			candidateStem
+				.toLowerCase()
+				.startsWith(`${searcheeReleaseGroup}-`) &&
+			candidateStem
+				.slice(searcheeReleaseGroup.length + 1)
+				.toLowerCase() === candidateReleaseGroup)
+	) {
+		return true;
 	}
 
 	// Anime naming can cause weird things to match as release groups
